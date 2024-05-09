@@ -19,7 +19,7 @@ bot.on(message('text'), (ctx) => {
     `https://t.me/${
       Number.isSafeInteger(Number(phoneNumberStr))
         ? `+251${phoneNumberStr}`
-        : `@${ctx.message.text.trim().replace(/\s/g, '').replace(/^@/, '')}`
+        : ctx.message.text.trim().replace(/\s/g, '').replace(/^@/, '')
     }`,
   )
 })
