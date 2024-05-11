@@ -9,18 +9,23 @@ bot.command('start', (ctx) => {
   )
 })
 
-bot.on(message('text'), (ctx) => {
+bot.on(message('text'), async (ctx) => {
   const phoneNumberStr = ctx.message.text
     .trim()
     .replace(/(\s|\-|\(|\))/gi, '')
     .replace(/^(\+251|0)/, '')
 
-  ctx.reply(
+  await ctx.reply(
     `https://t.me/${
       Number.isSafeInteger(Number(phoneNumberStr))
         ? `+251${phoneNumberStr}`
         : ctx.message.text.trim().replace(/\s/g, '').replace(/^@/, '')
     }`,
+    {
+      reply_parameters: {
+        message_id: ctx.message.message_id,
+      },
+    },
   )
 })
 
@@ -29,19 +34,16 @@ await bot.telegram.setWebhook(webhookUrl)
 
 export default async (req, res) => {
   try {
-    const { body, query } = req
-
-    if (query.setWebhook === 'true') {
+    if (req.query.setWebhook === 'true') {
       await bot.telegram.setWebhook(webhookUrl)
-      console.log('Webhook set on-demand')
     }
 
-    if (query.secret === process.env.TELEGRAM_WEBHOOK_SECRET) {
-      await bot.handleUpdate(body, res)
+    if (req.method === 'POST' && req.query.secret === process.env.TELEGRAM_WEBHOOK_SECRET) {
+      await bot.handleUpdate(req.body)
     }
   } catch (e) {
     console.error(e)
-  } finally {
-    res.status(200).send('OK')
   }
+
+  res.status(200).send('OK')
 }
