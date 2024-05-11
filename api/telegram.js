@@ -34,12 +34,12 @@ await bot.telegram.setWebhook(webhookUrl)
 
 export default async (req, res) => {
   try {
-    if (req.query.setWebhook === 'true') {
-      await bot.telegram.setWebhook(webhookUrl)
-    }
-
-    if (req.method === 'POST' && req.query.secret === process.env.TELEGRAM_WEBHOOK_SECRET) {
-      await bot.handleUpdate(req.body)
+    if (req.method === 'POST') {
+      if (req.query.secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
+        console.error('Invalid secret')
+      } else {
+        await bot.handleUpdate(req.body)
+      }
     }
   } catch (e) {
     console.error(e)
@@ -47,3 +47,5 @@ export default async (req, res) => {
 
   res.status(200).send('OK')
 }
+
+const timeout = (t) => new Promise((resolve) => setTimeout(resolve, t))
