@@ -24,12 +24,24 @@ bot.on(message('text'), (ctx) => {
   )
 })
 
-await bot.telegram.setWebhook(`https://${process.env.VERCEL_URL}/api/telegram`)
+const webhookUrl = `https://${process.env.VERCEL_URL}/api/telegram?secret=${process.env.TELEGRAM_WEBHOOK_SECRET}`
+await bot.telegram.setWebhook(webhookUrl)
 
 export default async (req, res) => {
-  if (req.method === 'POST') {
-    await bot.handleUpdate(req.body, res)
-  } else {
-    res.status(200).json('Listening to bot events...')
+  try {
+    const { body, query } = req
+
+    if (query.setWebhook === 'true') {
+      await bot.telegram.setWebhook(webhookUrl)
+      console.log('Webhook set on-demand')
+    }
+
+    if (query.secret === process.env.TELEGRAM_WEBHOOK_SECRET) {
+      await bot.handleUpdate(body, res)
+    }
+  } catch (e) {
+    console.error(e)
+  } finally {
+    res.status(200).send('OK')
   }
 }
